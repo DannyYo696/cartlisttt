@@ -89,9 +89,9 @@ interface Stockpile {
 const StockpileStatsSidebar = ({ stats }: { stats: any }) => {
   if (!stats) return null;
 
-  const amountData = [
-    { name: 'Paid', value: stats.paidAmount },
-    { name: 'Not Paid', value: stats.notPaidAmount },
+  const deliveryData = [
+    { name: 'Paid', value: stats.deliveryPaidCount || 0 },
+    { name: 'Unpaid', value: stats.deliveryUnpaidCount || 0 },
   ];
 
   const quantityData = [
@@ -103,18 +103,18 @@ const StockpileStatsSidebar = ({ stats }: { stats: any }) => {
 
   return (
     <div className="space-y-6">
-      {/* Stockpile Amount Card */}
+      {/* Delivery Status Card */}
       <Card className="border-none shadow-sm bg-white rounded-[32px] p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Clock className="w-5 h-5 text-gray-400" />
-          <h3 className="font-bold text-lg">Stockpile amount</h3>
+          <Truck className="w-5 h-5 text-gray-400" />
+          <h3 className="font-bold text-lg">Delivery status</h3>
         </div>
         
         <div className="relative h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={amountData}
+                data={deliveryData}
                 cx="50%"
                 cy="100%"
                 startAngle={180}
@@ -124,32 +124,32 @@ const StockpileStatsSidebar = ({ stats }: { stats: any }) => {
                 paddingAngle={0}
                 dataKey="value"
               >
-                {amountData.map((entry, index) => (
+                {deliveryData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center pb-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase">All earnings</p>
-            <p className="text-xl font-black">₦{stats.totalEarnings.toLocaleString()}</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Total Deliveries</p>
+            <p className="text-xl font-black">{stats.totalStockpileCount}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-orange-50">
           <div className="text-center">
             <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mx-auto mb-2">
-              <ShoppingBag className="w-4 h-4 text-cartlist-orange" />
+              <AlertCircle className="w-4 h-4 text-cartlist-orange" />
             </div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase">Not paid</p>
-            <p className="font-black text-sm">₦{stats.notPaidAmount.toLocaleString()}</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Unpaid</p>
+            <p className="font-black text-sm">{stats.deliveryUnpaidCount}</p>
           </div>
           <div className="text-center">
             <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center mx-auto mb-2">
-              <DollarSign className="w-4 h-4 text-gray-400" />
+              <CheckCircle2 className="w-4 h-4 text-gray-400" />
             </div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase">Paid amount</p>
-            <p className="font-black text-sm">₦{stats.paidAmount.toLocaleString()}</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Paid</p>
+            <p className="font-black text-sm">{stats.deliveryPaidCount}</p>
           </div>
         </div>
       </Card>
@@ -270,7 +270,16 @@ export default function Stockpiles() {
     const timer = setTimeout(() => {
       fetchStockpiles();
     }, 300);
-    return () => clearTimeout(timer);
+    
+    // Real-time polling every 30 seconds
+    const interval = setInterval(() => {
+      fetchStockpiles();
+    }, 30000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [search, statusFilter, sortFilter]);
 
   const handleLogout = async () => {
