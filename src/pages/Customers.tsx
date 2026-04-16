@@ -37,6 +37,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "../contexts/AuthContext";
 import { Header } from "../components/Header";
+import { RemoveCustomerModal } from "../components/RemoveCustomerModal";
 import { useEffect, useState } from "react";
 import { Logo } from "./Landing";
 
@@ -59,6 +60,9 @@ export default function Customers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [selectedCustomerPhone, setSelectedCustomerPhone] = useState<string | null>(null);
+  const [confirmDeleteOnce, setConfirmDeleteOnce] = useState(false);
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -82,6 +86,40 @@ export default function Customers() {
   const handleLogout = async () => {
     await logout();
     navigate("/login");
+  };
+
+  const handleRemoveClick = (phone: string) => {
+    const skipConfirmation = localStorage.getItem("skip_delete_confirmation") === "true";
+    if (skipConfirmation) {
+      removeCustomer(phone);
+    } else {
+      setSelectedCustomerPhone(phone);
+      setIsRemoveModalOpen(true);
+    }
+  };
+
+  const removeCustomer = async (phone: string) => {
+    try {
+      const response = await fetchWithAuth(`/api/customers/${phone}`, {
+        method: "DELETE"
+      });
+      if (response.ok) {
+        fetchCustomers();
+      }
+    } catch (error) {
+      console.error("Error removing customer:", error);
+    }
+  };
+
+  const handleConfirmRemove = (dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      localStorage.setItem("skip_delete_confirmation", "true");
+    }
+    if (selectedCustomerPhone) {
+      removeCustomer(selectedCustomerPhone);
+    }
+    setIsRemoveModalOpen(false);
+    setSelectedCustomerPhone(null);
   };
 
   const filteredCustomers = customers.filter(c => {
@@ -258,7 +296,13 @@ export default function Customers() {
                               <span className="font-medium">Message</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator className="bg-orange-50 my-1" />
-                            <DropdownMenuItem className="rounded-xl px-3 py-2 cursor-pointer flex items-center gap-3 text-red-500 hover:bg-red-50">
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveClick(customer.phone);
+                              }}
+                              className="rounded-xl px-3 py-2 cursor-pointer flex items-center gap-3 text-red-500 hover:bg-red-50"
+                            >
                               <UserMinus className="w-4 h-4" />
                               <span className="font-medium">Remove</span>
                             </DropdownMenuItem>
@@ -293,6 +337,12 @@ export default function Customers() {
           </div>
         </Card>
       </main>
+
+      <RemoveCustomerModal 
+        isOpen={isRemoveModalOpen}
+        onClose={() => setIsRemoveModalOpen(false)}
+        onConfirm={handleConfirmRemove}
+      />
     </div>
   );
 }
