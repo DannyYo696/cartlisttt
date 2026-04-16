@@ -1115,6 +1115,8 @@ app.get("/api/stockpiles/stats", authenticate, async (req: any, res) => {
       totalStockpileCount: allStockpiles.length,
       openStockpileCount: activeStockpiles.length,
       closedStockpileCount: allStockpiles.filter(s => s.status === "closed").length,
+      deliveryPaidCount: allStockpiles.filter(s => s.deliveryPaid).length,
+      deliveryUnpaidCount: allStockpiles.filter(s => !s.deliveryPaid).length,
     };
 
     res.json(stats);
