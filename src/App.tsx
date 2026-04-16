@@ -18,6 +18,7 @@ import PublicCustomerView from "./pages/PublicCustomerView";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import BusinessNameModal from "./components/BusinessNameModal";
+import WelcomeModal from "./components/WelcomeModal";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -42,6 +43,7 @@ export default function App() {
     <AuthProvider>
       <NotificationProvider>
         <BusinessNameModal />
+        <WelcomeModal />
         <Router>
           <Routes>
           <Route path="/" element={<Landing />} />
