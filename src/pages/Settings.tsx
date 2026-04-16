@@ -324,8 +324,11 @@ export default function Settings() {
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-gray-700">Phone number</label>
                       <div className="flex gap-2">
-                        <Select defaultValue="+234" disabled>
-                          <SelectTrigger className="w-[100px] h-12 bg-gray-50 border-gray-100 rounded-2xl text-gray-400">
+                        <Select 
+                          value="+234" 
+                          disabled={!isEditingProfile}
+                        >
+                          <SelectTrigger className={`w-[100px] h-12 border-orange-50 rounded-2xl ${!isEditingProfile ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-[#FDF8F3]/50"}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="rounded-2xl border-orange-50">
@@ -336,8 +339,9 @@ export default function Settings() {
                         </Select>
                         <Input 
                           value={profileData.whatsappNumber}
-                          readOnly
-                          className="flex-1 h-12 bg-gray-50 border-gray-100 rounded-2xl text-gray-400 cursor-not-allowed"
+                          onChange={(e) => setProfileData({ ...profileData, whatsappNumber: e.target.value })}
+                          readOnly={!isEditingProfile}
+                          className={`flex-1 h-12 border-orange-50 rounded-2xl ${!isEditingProfile ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-[#FDF8F3]/50"}`}
                           placeholder="(555) 000-0000"
                         />
                       </div>
@@ -408,7 +412,7 @@ export default function Settings() {
                       )}
                     </AnimatePresence>
                   </form>
-                  {isEditingProfile && profileData.gender !== originalGender && (
+                  {isEditingProfile && (
                     <div className="pt-4">
                       <Button 
                         onClick={handleProfileUpdate}
