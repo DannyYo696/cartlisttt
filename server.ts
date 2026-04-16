@@ -422,6 +422,7 @@ const userSchema = new mongoose.Schema({
   resetPasswordOTP: { type: String },
   resetPasswordExpires: { type: Date },
   resetPasswordAttempts: [{ type: Date }],
+  hasSeenWelcome: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 
