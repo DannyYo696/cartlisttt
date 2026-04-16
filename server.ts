@@ -701,9 +701,8 @@ app.get("/api/user/profile", authenticate, async (req: any, res) => {
 app.patch("/api/user/profile", authenticate, async (req: any, res) => {
   try {
     const updates = req.body;
-    // Don't allow password or whatsappNumber updates here
+    // Don't allow password updates here
     delete updates.password;
-    delete updates.whatsappNumber;
     
     const user = await User.findByIdAndUpdate(req.userId, updates, { new: true }).select("-password");
     res.json(user);
