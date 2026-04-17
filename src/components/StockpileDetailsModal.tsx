@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Calendar } from "./ui/calendar";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { ConfirmationModal } from "./ConfirmationModal";
 
 interface StockpileItem {
@@ -31,11 +32,13 @@ interface Stockpile {
 export const StockpileDetailsModal = ({ stockpile, isOpen, onClose, onUpdate }: { stockpile: Stockpile | null, isOpen: boolean, onClose: () => void, onUpdate?: () => void }) => {
   const navigate = useNavigate();
   const { fetchWithAuth } = useAuth();
+  const { showToast } = useToast();
   const [isExtending, setIsExtending] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
 
   if (!stockpile) return null;
 
@@ -97,6 +100,23 @@ export const StockpileDetailsModal = ({ stockpile, isOpen, onClose, onUpdate }: 
     setIsExtending(false);
     setSelectedDate(undefined);
     onClose();
+  };
+
+  const handleSendReminder = async () => {
+    if (!stockpile) return;
+    setIsSendingReminder(true);
+    try {
+      const response = await fetchWithAuth(`/api/stockpiles/${stockpile._id}/remind`, {
+        method: "POST"
+      });
+      if (response.ok) {
+        showToast("Reminder sent");
+      }
+    } catch (error) {
+      console.error("Error sending reminder:", error);
+    } finally {
+      setIsSendingReminder(false);
+    }
   };
 
   return (
@@ -180,9 +200,10 @@ export const StockpileDetailsModal = ({ stockpile, isOpen, onClose, onUpdate }: 
                   <Button 
                     variant="ghost" 
                     className="bg-gray-50 text-gray-400 text-xs font-bold rounded-lg h-8 px-3"
-                    onClick={() => console.log(`Reminder sent to ${stockpile.customerName}`)}
+                    onClick={handleSendReminder}
+                    disabled={isSendingReminder || stockpile.status === "closed"}
                   >
-                    Send reminder
+                    {isSendingReminder ? "Sending..." : "Send reminder"}
                   </Button>
                 </div>
 
