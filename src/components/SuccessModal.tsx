@@ -4,6 +4,7 @@ import { CheckCircle2, X, Sparkles, ArrowRight, Copy, ExternalLink, MessageSquar
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useToast } from "@/contexts/ToastContext";
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   data
 }) => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
 
   const handleClose = () => {
@@ -40,6 +42,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     const id = data.stockpileId || data._id;
     const link = `${window.location.origin}/view/${id}`;
     navigator.clipboard.writeText(link);
+    showToast("Copied to clipboard");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
