@@ -55,7 +55,7 @@ import { Logo } from "./Landing";
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user, logout, fetchWithAuth } = useAuth();
+  const { user, login, logout, fetchWithAuth } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -74,7 +74,9 @@ export default function Settings() {
     businessCategory: "",
     language: "English",
     timezone: "+1 GMT",
-    currency: "Naira"
+    currency: "Naira",
+    enableLateFees: false,
+    lateFeeAmount: 0
   });
 
   // Notification State
@@ -130,7 +132,9 @@ export default function Settings() {
             businessCategory: data.businessCategory || "",
             language: data.language || "English",
             timezone: data.timezone || "+1 GMT",
-            currency: data.currency || "Naira"
+            currency: data.currency || "Naira",
+            enableLateFees: data.enableLateFees || false,
+            lateFeeAmount: data.lateFeeAmount || 0
           });
           setOriginalGender(data.gender || "");
           if (data.notifications) {
@@ -160,6 +164,9 @@ export default function Settings() {
       const finalBusinessCategory = profileData.businessCategory === "Other" ? otherCategoryValue : profileData.businessCategory;
       const response = await fetchWithAuth("/api/user/profile", {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ 
           ...profileData, 
           businessCategory: finalBusinessCategory,
@@ -167,6 +174,9 @@ export default function Settings() {
         })
       });
       if (response.ok) {
+        const updatedUser = await response.json();
+        // Update auth context so other components see the changes
+        login(updatedUser);
         setMessage({ type: "success", text: "Settings updated successfully!" });
         setOriginalGender(profileData.gender);
         setIsEditingProfile(false);
@@ -241,6 +251,9 @@ export default function Settings() {
             </TabsTrigger>
             <TabsTrigger value="notification" className="rounded-xl px-8 py-2.5 data-[state=active]:bg-white data-[state=active]:text-cartlist-orange data-[state=active]:shadow-sm font-bold transition-all">
               Notification
+            </TabsTrigger>
+            <TabsTrigger value="stockpile" className="rounded-xl px-8 py-2.5 data-[state=active]:bg-white data-[state=active]:text-cartlist-orange data-[state=active]:shadow-sm font-bold transition-all">
+              Stockpile
             </TabsTrigger>
             <TabsTrigger value="security" className="rounded-xl px-8 py-2.5 data-[state=active]:bg-white data-[state=active]:text-cartlist-orange data-[state=active]:shadow-sm font-bold transition-all">
               Security
@@ -579,6 +592,69 @@ export default function Settings() {
                     </div>
                   </div>
                 ))}
+                <div className="pt-4">
+                  <Button 
+                    onClick={handleProfileUpdate}
+                    disabled={isSaving}
+                    className="bg-cartlist-orange hover:bg-orange-600 text-white rounded-full px-10 h-12 font-bold gap-2 shadow-lg shadow-orange-200"
+                  >
+                    {isSaving ? "Saving..." : "Save changes"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stockpile" className="mt-0">
+            <Card className="border-none shadow-sm bg-white rounded-[32px] overflow-hidden max-w-3xl">
+              <CardHeader className="p-8 pb-4">
+                <CardTitle className="text-xl font-bold">Stockpile Settings</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Configure automated rules for your stockpiles</p>
+              </CardHeader>
+              <CardContent className="p-8 pt-4 space-y-8">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-6 rounded-3xl border border-orange-50 bg-orange-50/10">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-gray-900">Enable Daily Late Fees</h4>
+                      <p className="text-sm text-muted-foreground">Automatically calculate and display late fees for missed deadlines</p>
+                    </div>
+                    <Switch 
+                      checked={profileData.enableLateFees}
+                      onCheckedChange={(checked) => setProfileData({ ...profileData, enableLateFees: checked })}
+                    />
+                  </div>
+
+                  <AnimatePresence>
+                    {profileData.enableLateFees && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-4 overflow-hidden"
+                      >
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-gray-700">Daily Late Fee Amount ({profileData.currency === "Naira" ? "₦" : profileData.currency === "Dollar" ? "$" : "€"})</label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">
+                              {profileData.currency === "Naira" ? "₦" : profileData.currency === "Dollar" ? "$" : "€"}
+                            </span>
+                            <Input 
+                              type="number"
+                              value={profileData.lateFeeAmount}
+                              onChange={(e) => setProfileData({ ...profileData, lateFeeAmount: Number(e.target.value) })}
+                              className="h-12 pl-10 bg-[#FDF8F3]/50 border-orange-50 rounded-2xl focus-visible:ring-cartlist-orange"
+                              placeholder="0"
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground italic">
+                            Customers will be charged this amount for every day past their stockpile end date.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <div className="pt-4">
                   <Button 
                     onClick={handleProfileUpdate}
