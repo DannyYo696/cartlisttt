@@ -12,6 +12,9 @@ interface User {
   businessCategory?: string;
   hasSeenWelcome?: boolean;
   googleId?: string;
+  enableLateFees?: boolean;
+  lateFeeAmount?: number;
+  currency?: string;
 }
 
 interface AuthContextType {
