@@ -102,7 +102,16 @@ export default function Settings() {
   const [otherCategoryValue, setOtherCategoryValue] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null);
 
-  const categories = ["Food", "Fashion", "Beauty", "Baby Products", "Household", "Other"];
+  const categories = [
+    "Food & Groceries",
+    "Fashion & Apparel",
+    "Health & Beauty",
+    "Electronics",
+    "Home & Furniture",
+    "Agriculture",
+    "Baby & Kids",
+    "Other"
+  ];
 
   useEffect(() => {
     const fetchProfile = async () => {
