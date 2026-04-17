@@ -11,6 +11,7 @@ interface User {
   whatsappNumber?: string;
   businessCategory?: string;
   hasSeenWelcome?: boolean;
+  googleId?: string;
 }
 
 interface AuthContextType {
